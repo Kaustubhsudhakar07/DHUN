@@ -60,3 +60,7 @@ scripts/download_datasets.py
 scripts/download_dhundna_data.py
 .agents/
 .gemini/
+
+# Zip bundles (for Google Drive upload, not for git)
+*.zip
+dhun_data_bundle/

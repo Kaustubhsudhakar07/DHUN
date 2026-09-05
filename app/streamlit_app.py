@@ -7,9 +7,8 @@ Features:
 2. 🎧 Connect Spotify: OAuth 2.0 PKCE / Curated playlist taste decoding
 3. ❤️ Find Similar Songs: Melodic, acoustic, and content similarity search
 4. 🔎 Semantic Music Search: Multilingual natural language descriptive retrieval
-5. 📊 Catalog & Model Benchmarks: 100k track catalog insights & HetRec offline evaluation
+5. 📊 Music Catalog: 100k track catalog insights, languages & era distributions
 6. 👥 Collaborative Matrix: Legacy 360k listener matrix & interleaved playlist generator
-7. ⚙️ Health & Feedback: Live API inspector and user engagement feedback logs
 """
 
 import html
@@ -34,10 +33,8 @@ import streamlit as st
 
 from app.api_client import RecommendationClient
 from app.components import (
-    plot_beyond_accuracy_radar,
     plot_catalog_eras,
     plot_catalog_languages,
-    plot_ndcg_comparison,
     plot_top_tags,
     render_hero_banner,
     render_playlist_item,
@@ -49,7 +46,6 @@ from src.config import (
     ARTIST_MAPPING,
     CATALOG_SUMMARY,
     DATA_DIR,
-    EVALUATION_RESULTS,
     MASTER_CATALOG,
     POPULARITY_SCORES,
 )
@@ -78,16 +74,6 @@ def get_client() -> RecommendationClient:
     return RecommendationClient()
 
 
-@st.cache_data(show_spinner=False)
-def load_eval_data() -> Dict[str, Any]:
-    """Load offline evaluation benchmark results."""
-    if EVALUATION_RESULTS.exists():
-        try:
-            with open(EVALUATION_RESULTS, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-    return {}
 
 
 @st.cache_data(show_spinner=False)
@@ -175,9 +161,8 @@ tabs = st.tabs([
     "🎧 Connect Spotify",
     "❤️ Find Similar Songs",
     "🔎 Semantic Music Search",
-    "📊 Catalog & Benchmarks",
+    "📊 Music Catalog",
     "👥 Collaborative Matrix",
-    "⚙️ Health & Feedback",
 ])
 
 
@@ -594,11 +579,11 @@ with tabs[3]:
 
 
 # -------------------------------------------------------------------------
-# TAB 5: CATALOG & MODEL BENCHMARKS
+# TAB 5: MUSIC CATALOG INSIGHTS
 # -------------------------------------------------------------------------
 with tabs[4]:
-    st.subheader("📊 Master Catalog Insights & Offline Model Benchmarks")
-    st.caption("Master catalog distribution (100,558 tracks) and empirical HetRec 2011 offline validation benchmarks.")
+    st.subheader("📊 Master Catalog Insights")
+    st.caption("Master catalog distribution, language breakdown, and release eras across 100,558 tracks.")
 
     # High-level Catalog Stat Cards
     c1, c2, c3, c4 = st.columns(4)
@@ -645,52 +630,6 @@ with tabs[4]:
     with chart_col2:
         st.markdown("#### 📅 Release Era Distribution")
         st.plotly_chart(plot_catalog_eras(cat_summary["eras"]), use_container_width=True)
-
-    # Offline HetRec Model Benchmarks
-    st.markdown("---")
-    st.markdown("### 🏆 Offline Recommender Model Benchmarks (HetRec Validation Split)")
-    eval_data = load_eval_data()
-    if eval_data:
-        ranking = eval_data.get("ranking", {})
-        hybrid_ndcg = ranking.get("Hybrid", {}).get("ndcg", {}).get("10", 0.0)
-        als_ndcg = ranking.get("ALS", {}).get("ndcg", {}).get("10", 0.0)
-        gain_pct = ((hybrid_ndcg - als_ndcg) / als_ndcg * 100) if als_ndcg > 0 else 0
-
-        # Performance summary pill
-        st.markdown(
-            f'<div style="background: rgba(29, 185, 84, 0.1); border: 1px solid rgba(29, 185, 84, 0.3); border-radius: 10px; padding: 12px 18px; margin: 12px 0 18px 0; display: flex; align-items: center; justify-content: space-between;">'
-            f'<div><strong>🥇 Top Performer: Hybrid Recommender</strong> <span style="color: #94A3B8;">(Collaborative Matrix Factorization + Content Filtering + Popularity Prior)</span></div>'
-            f'<div style="color: #4ADE80; font-weight: 700; font-size: 1.05rem;">+{gain_pct:.1f}% NDCG@10 vs pure ALS</div>'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-
-        bm_c1, bm_c2 = st.columns(2)
-        with bm_c1:
-            st.markdown("#### 🎯 Ranking Accuracy (NDCG@K)")
-            st.caption("Measures position-weighted hit accuracy across top-K recommendations.")
-            st.plotly_chart(plot_ndcg_comparison(eval_data), use_container_width=True)
-        with bm_c2:
-            st.markdown("#### 🕸️ Beyond-Accuracy Tradeoffs")
-            st.caption("Multidimensional balance: Diversity, Novelty, Personalization, and Catalog Coverage.")
-            st.plotly_chart(plot_beyond_accuracy_radar(eval_data), use_container_width=True)
-
-        # Full Ranking Metrics Table
-        st.markdown("#### 📋 Detailed Metrics Across All K")
-        records = []
-        for model_name, metrics in ranking.items():
-            for k in [5, 10, 20]:
-                k_str = str(k)
-                records.append({
-                    "Model": model_name,
-                    "K": k,
-                    "Precision@K": round(metrics["precision"].get(k_str, 0.0), 4),
-                    "Recall@K": round(metrics["recall"].get(k_str, 0.0), 4),
-                    "Hit Rate@K": round(metrics["hit_rate"].get(k_str, 0.0), 4),
-                    "MAP@K": round(metrics["map"].get(k_str, 0.0), 4),
-                    "NDCG@K": round(metrics["ndcg"].get(k_str, 0.0), 4),
-                })
-        st.dataframe(pd.DataFrame(records), use_container_width=True, hide_index=True)
 
 
 # -------------------------------------------------------------------------
@@ -741,33 +680,4 @@ with tabs[5]:
                     render_playlist_item(t, index=idx)
 
 
-# -------------------------------------------------------------------------
-# TAB 7: HEALTH & USER FEEDBACK LOGS
-# -------------------------------------------------------------------------
-with tabs[6]:
-    st.subheader("⚙️ System Status & Recorded Feedback")
-    st.caption("Operational health, backend connectivity, and user interaction feedback logs.")
 
-    health_info = client.get_health()
-    st.json(health_info)
-
-    st.markdown("### 📝 Recorded User Interactions")
-    feedback_file = DATA_DIR / "feedback.json"
-    if feedback_file.exists() and feedback_file.stat().st_size > 0:
-        try:
-            records = []
-            with open(feedback_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        records.append(json.loads(line))
-            if records:
-                fb_df = pd.DataFrame(records)
-                st.dataframe(fb_df, use_container_width=True, hide_index=True)
-                st.caption(f"Total Feedback Events: {len(records)}")
-            else:
-                st.info("Feedback log is empty.")
-        except Exception as e:
-            st.warning(f"Could not load feedback logs: {e}")
-    else:
-        st.info("No feedback events logged yet. Use the 👍/👎/❤️ buttons on any recommendation card to log interactions!")

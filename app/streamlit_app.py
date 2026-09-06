@@ -67,18 +67,22 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 from src.data.download_bundle import ensure_bundle_downloaded, is_bundle_present
 
 if not is_bundle_present(PROJECT_ROOT):
+    st.info("📦 **Initial Setup**: Downloading 100,558-track catalog & ML models from GitHub Releases...")
     status_slot = st.empty()
-    with st.spinner("Setting up models & music catalog (first-time setup, ~30-45s)..."):
-        ready = ensure_bundle_downloaded(
+    with st.spinner("Downloading and extracting models (this runs only once, ~30-45s)..."):
+        ready, detail_msg = ensure_bundle_downloaded(
             PROJECT_ROOT,
             progress_callback=lambda msg: status_slot.info(f"⏳ **{msg}**"),
         )
     status_slot.empty()
     if not ready:
         st.error(
-            "⚠️ **Pre-trained models & master catalog could not be loaded.**\n\n"
-            "Please ensure `dhun_data_bundle.zip` is available in your [GitHub Releases](https://github.com/Kaustubhsudhakar07/DHUN/releases) under `v1.0.0`."
+            f"⚠️ **Pre-trained models & master catalog could not be loaded.**\n\n"
+            f"**Details**: `{detail_msg}`\n\n"
+            "Please verify that `dhun_data_bundle.zip` is attached to your [GitHub Releases](https://github.com/Kaustubhsudhakar07/DHUN/releases) under `v1.0.0`."
         )
+        if st.button("🔄 Retry Download", type="primary"):
+            st.rerun()
         st.stop()
     else:
         st.success("✅ Models and catalog loaded successfully! Starting app...")

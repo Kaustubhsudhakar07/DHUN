@@ -3,10 +3,12 @@ Automatic Data & Model Artifact Provisioner for Streamlit Cloud Deployment.
 
 Ensures all required pre-trained models and processed catalog files are present.
 Downloads the release bundle directly into the project directory if running in the cloud.
+Handles Windows backslash paths in zip archives for seamless Linux extraction.
 """
 
 import logging
 import os
+import shutil
 import sys
 import zipfile
 from pathlib import Path
@@ -36,6 +38,34 @@ def is_bundle_present(project_root: Path) -> bool:
         and (project_root / rel_path).stat().st_size > 500
         for rel_path in REQUIRED_RELATIVE_FILES
     )
+
+
+def extract_zip_normalized(zip_path: Path, target_dir: Path) -> None:
+    """Extract zip archive, normalizing any Windows backslashes in member paths to forward slashes.
+
+    Crucial for Linux environments (like Streamlit Cloud) when the zip was created on Windows.
+    """
+    with zipfile.ZipFile(zip_path, "r") as z:
+        for member in z.infolist():
+            # Replace Windows backslashes with forward slashes for Linux compatibility
+            norm_name = member.filename.replace("\\", "/").lstrip("/")
+            if not norm_name or norm_name.endswith("/"):
+                # Directory entry
+                (target_dir / norm_name).mkdir(parents=True, exist_ok=True)
+                continue
+
+            target_path = target_dir / norm_name
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            with z.open(member) as src, open(target_path, "wb") as dst:
+                shutil.copyfileobj(src, dst)
+
+    # Clean up any leftover flat files created with literal backslashes from previous runs
+    try:
+        for p in target_dir.iterdir():
+            if p.is_file() and "\\" in p.name:
+                p.unlink(missing_ok=True)
+    except Exception:
+        pass
 
 
 def download_with_requests(
@@ -109,9 +139,8 @@ def ensure_bundle_downloaded(
 
         if zip_tmp.exists() and zipfile.is_zipfile(zip_tmp):
             if progress_callback:
-                progress_callback("Extracting models and catalog (unpacking 100k tracks)...")
-            with zipfile.ZipFile(zip_tmp, "r") as z:
-                z.extractall(project_root)
+                progress_callback("Extracting models and catalog (normalizing paths for Linux)...")
+            extract_zip_normalized(zip_tmp, project_root)
             zip_tmp.unlink(missing_ok=True)
             if is_bundle_present(project_root):
                 return True, "Extracted successfully"
@@ -146,8 +175,7 @@ def ensure_bundle_downloaded(
             if zip_tmp.exists() and zipfile.is_zipfile(zip_tmp):
                 if progress_callback:
                     progress_callback("Extracting models and music catalog...")
-                with zipfile.ZipFile(zip_tmp, "r") as z:
-                    z.extractall(project_root)
+                extract_zip_normalized(zip_tmp, project_root)
                 zip_tmp.unlink(missing_ok=True)
                 if is_bundle_present(project_root):
                     return True, "Extracted successfully from Google Drive"

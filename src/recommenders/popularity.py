@@ -182,14 +182,24 @@ class PopularityRecommender(BaseRecommender):
     ) -> "PopularityRecommender":
         """Load popularity scores from disk."""
         path = path or POPULARITY_SCORES
-        with open(path, "r") as f:
+        if not Path(path).exists():
+            logger.warning("Popularity scores file %s not found. Using fallback popularity distribution.", path)
+            n_items = len(idx2artist) if idx2artist else 98104
+            self._scores = np.zeros(n_items, dtype=np.float32)
+            self._listener_counts = np.zeros(n_items, dtype=np.int32)
+            self._sorted_indices = np.arange(n_items)
+            self._idx2artist = idx2artist
+            self._is_fitted = True
+            return self
+
+        with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         self._scores = np.array(data["scores"], dtype=np.float32)
         self._listener_counts = np.array(data["listener_counts"], dtype=np.int32)
         self._sorted_indices = np.argsort(self._scores)[::-1]
         self._idx2artist = idx2artist
         self._is_fitted = True
-        logger.info("Loaded popularity scores from %s.", path.name)
+        logger.info("Loaded popularity scores from %s.", Path(path).name)
         return self
 
     def _check_fitted(self) -> None:

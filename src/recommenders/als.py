@@ -309,6 +309,11 @@ class ALSRecommender(BaseRecommender):
         from implicit.als import AlternatingLeastSquares
 
         path = path or ALS_MODEL
+        if not Path(path).exists():
+            logger.warning("ALS model file %s not found. Skipping ALS weights.", path)
+            self._model = None
+            self._is_fitted = False
+            return self
 
         data = np.load(path)
         user_factors = data["user_factors"]

@@ -24,8 +24,22 @@ A production-grade hybrid music recommendation and semantic discovery engine com
 - **🔎 Multilingual Semantic Music Search**:
   - Natural language descriptive retrieval powered by `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` and N-gram TF-IDF.
   - Supports queries like *"90s Hindi romantic songs about heartbreak"*, *"energetic punjabi party dance beat"*, or *"rainy monsoon acoustic love"*.
-
+- **🌐 Live Cloud Deployment**:
+  - Hosted and accessible 24/7 on Streamlit Community Cloud: **[https://dhundna.streamlit.app](https://dhundna.streamlit.app)**.
 - **100% Test Coverage**: **146 passed automated unit and integration tests** (135 legacy tests preserved + 11 new DhunDNA tests).
+
+---
+
+## 🖥️ Streamlined 6-Tab Interactive Dashboard
+
+The dashboard provides a focused, dark-mode glassmorphic user experience across 6 core discovery interfaces:
+
+1. **✍️ Enter Taste DNA**: Enter favorite songs, artists, genres, languages, eras, and moods to decode your unique taste profile and receive hybrid recommendations with explanation callouts.
+2. **🎧 Connect Spotify**: Seamless OAuth 2.0 PKCE connection or instant demo mixes (*"My Bollywood Favorites"*, *"Desi Indie & Acoustic"*, *"Global Pop"*) to decode playlist DNA.
+3. **❤️ Find Similar Songs**: Entity-resolved similarity search (e.g. *Kesariya*, *Tum Se Hi*, *Summer High*, *Yellow*) retrieving acoustically, melodically, and collaboratively related tracks.
+4. **🔎 Semantic Music Search**: Natural language descriptive retrieval across 100,558 tracks using conversational prompts (e.g. *"rainy monsoon acoustic love song"*).
+5. **📊 Music Catalog Insights**: Explore the 100,558-track catalog with interactive Plotly charts showing language breakdown (Hindi, Punjabi, Tamil, Telugu, Global) and release era distribution (1960–2025).
+6. **👥 Collaborative Matrix**: Direct exploration of the 358,868-listener Last.fm collaborative matrix (ALS, BPR, Content, Popularity) and customizable interleaved discovery playlists.
 
 ---
 
@@ -167,6 +181,12 @@ If you prefer to run only the Streamlit application without running FastAPI:
 python -m streamlit run app/streamlit_app.py
 ```
 *The app automatically detects that the REST API is offline and falls back to running the ML models in-memory.*
+
+### Option C: Live Cloud Deployment (Streamlit Community Cloud)
+Access the live deployed production version directly in your browser with zero local setup:
+👉 **[https://dhundna.streamlit.app](https://dhundna.streamlit.app)**
+
+*(Models and master catalog are automatically provisioned on the cloud from GitHub Release assets via `src/data/download_bundle.py`).*
 
 ---
 

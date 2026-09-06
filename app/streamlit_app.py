@@ -63,6 +63,33 @@ st.set_page_config(
 # Inject Custom Styling
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
+# Automatic Model & Data Artifact Check (for Streamlit Community Cloud)
+from src.data.download_bundle import ensure_bundle_downloaded, is_bundle_present
+
+if not is_bundle_present(PROJECT_ROOT):
+    status_slot = st.empty()
+    with st.spinner("Initializing models & music catalog (first-time setup)..."):
+        ready = ensure_bundle_downloaded(
+            PROJECT_ROOT,
+            progress_callback=lambda msg: status_slot.info(f"⏳ **{msg}**"),
+        )
+    status_slot.empty()
+    if not ready:
+        st.error(
+            "⚠️ **Pre-trained models & master catalog not found.**\n\n"
+            "On Streamlit Community Cloud, large model files (>100MB) are excluded from Git.\n\n"
+            "**To activate the models:**\n"
+            "1. Upload `dhun_data_bundle.zip` to a [GitHub Release](https://github.com/Kaustubhsudhakar07/DHUN/releases/new) or Google Drive.\n"
+            "2. In your Streamlit Cloud app settings: **Settings ➔ Secrets**, add:\n"
+            "```toml\n"
+            'DATA_BUNDLE_URL = "https://github.com/Kaustubhsudhakar07/DHUN/releases/download/v1.0.0/dhun_data_bundle.zip"\n'
+            "# OR for Google Drive:\n"
+            'GDRIVE_FILE_ID = "your_google_drive_file_id_here"\n'
+            "```\n"
+            "3. Click **Reboot** in the Streamlit Cloud menu."
+        )
+        st.stop()
+
 
 # =========================================================================
 # CLIENT & DATA CACHING

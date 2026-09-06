@@ -24,39 +24,11 @@ A production-grade hybrid music recommendation and semantic discovery engine com
 - **🔎 Multilingual Semantic Music Search**:
   - Natural language descriptive retrieval powered by `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` and N-gram TF-IDF.
   - Supports queries like *"90s Hindi romantic songs about heartbreak"*, *"energetic punjabi party dance beat"*, or *"rainy monsoon acoustic love"*.
-- **🏆 Empirically Validated Hybrid Engine**:
-  - The Hybrid recommender achieves **NDCG@10 = 0.0768** (**+22.3% gain over pure ALS** and **+317% over Popularity baseline**), **Hit Rate@10 = 13.8%**, and **Personalization = 0.9702**.
+
 - **100% Test Coverage**: **146 passed automated unit and integration tests** (135 legacy tests preserved + 11 new DhunDNA tests).
 
 ---
 
-## 📊 Offline Benchmark Results
-
-Evaluated on the HetRec 2011 validation split (500 users, 98,104 catalog artists):
-
-### 1. Ranking Accuracy Comparison
-
-| Algorithm | Precision@5 | Recall@5 | Precision@10 | Recall@10 | Hit Rate@10 | MAP@10 | NDCG@10 |
-|---|---|---|---|---|---|---|---|
-| **Popularity Baseline** | 0.0048 | 0.0240 | 0.0040 | 0.0400 | 4.0% | 0.0119 | 0.0184 |
-| **Content-Based (TF-IDF)** | 0.0052 | 0.0260 | 0.0054 | 0.0540 | 5.4% | 0.0151 | 0.0239 |
-| **BPR (Bayesian Implicit)** | 0.0084 | 0.0420 | 0.0064 | 0.0640 | 6.4% | 0.0283 | 0.0366 |
-| **ALS (Matrix Factorization)** | 0.0144 | 0.0720 | 0.0124 | 0.1240 | 12.4% | 0.0444 | 0.0628 |
-| **⭐ Hybrid Engine (Optimal)** | **0.0180** | **0.0900** | **0.0138** | **0.1380** | **13.8%** | **0.0583** | **0.0768** |
-
-> **Key Takeaway**: Fusing collaborative filtering (weight = 0.40), content profiling (weight = 0.30), and popularity prior (weight = 0.30) yields a **+22.3% improvement in NDCG@10** over standalone ALS, effectively resolving sparsity and popularity bias.
-
-### 2. Beyond-Accuracy Tradeoffs
-
-| Algorithm | Catalog Coverage | Intra-List Diversity | Novelty (bits) | Personalization |
-|---|---|---|---|---|
-| **Popularity Baseline** | 0.02% | 0.765 | 3.09 | 0.330 |
-| **Content-Based** | 1.47% | 0.506 | 8.19 | 0.985 |
-| **ALS** | 2.15% | 0.817 | 6.21 | 0.996 |
-| **BPR** | 3.58% | 0.899 | 9.13 | 0.999 |
-| **Hybrid Engine** | 1.17% | 0.672 | 4.91 | 0.970 |
-
----
 
 ## 🏛️ System Architecture
 
@@ -230,7 +202,3 @@ python scripts/tune_hybrid_weights.py --users 500 --step 0.1
 
 ---
 
-## 🤝 Technical Decisions & Architecture Log
-
-- For an in-depth breakdown of the entire system in simple words (including each tab, model, chart, and Spotify connection), please read [`understand.md`](understand.md).
-- For in-depth explanations of algorithmic choices, data sparsity mitigations, cold-start handling, and evaluation methodology, please refer to [`DECISIONS.md`](DECISIONS.md).

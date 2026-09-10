@@ -516,7 +516,7 @@ with tabs[2]:
     with sim_c1:
         query_song = st.text_input("Song Title", value=st.session_state.get("sim_title", "Kesariya"))
     with sim_c2:
-        query_artist = st.text_input("Artist (Optional)", value=st.session_state.get("sim_artist", "Pritam"))
+        query_artist = st.text_input("Artist", value=st.session_state.get("sim_artist", "Pritam"))
     with sim_c3:
         sim_k = st.slider("Count", min_value=5, max_value=25, value=10, key="sim_k")
 
